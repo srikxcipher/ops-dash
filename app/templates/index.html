@@ -1,40 +1,303 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
-  <style>
-  body { font-family: 'Inter', sans-serif; }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ops Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
-<body class="bg-gray-100 text-gray-800">
-  <div class="max-w-3xl mx-auto py-10 px-6">
-    <header class="mb-10">
-      <h1 class="text-3xl font-bold text-center text-indigo-700">System Status Dashboard</h1>
-      <p class="text-center text-sm text-gray-500">A minimal ops-focused app for system status and metrics</p>
-    </header>
+<body class="bg-gradient-to-br from-gray-900 to-gray-800 text-white font-sans min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-teal-400">
+                    Enterprise Ops Dashboard
+                </h1>
+                <p class="text-gray-400">Comprehensive Kubernetes & System Monitoring</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="bg-gray-800 rounded-lg p-2">
+                    <span id="cluster-status" class="flex items-center">
+                        <i class="fas fa-server mr-2 text-green-400"></i>
+                        <span>Cluster: </span>
+                        <span class="ml-2 text-green-400">Healthy</span>
+                    </span>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-2">
+                    <span id="current-time" class="text-gray-300"></span>
+                </div>
+            </div>
+        </div>
 
-    <div class="grid grid-cols-1 gap-4">
-      <a href="/status" class="block p-5 bg-white rounded-xl shadow hover:shadow-md transition">
-        <h2 class="text-lg font-semibold text-gray-700">Service Status</h2>
-        <p class="text-sm text-gray-500">View status of services like PostgreSQL, Redis, etc.</p>
-      </a>
-      <a href="/metrics" class="block p-5 bg-white rounded-xl shadow hover:shadow-md transition">
-        <h2 class="text-lg font-semibold text-gray-700">System Metrics</h2>
-        <p class="text-sm text-gray-500">Check CPU, memory usage and system info</p>
-      </a>
-      <a href="/healthz" class="block p-5 bg-white rounded-xl shadow hover:shadow-md transition">
-        <h2 class="text-lg font-semibold text-gray-700">Health Check</h2>
-        <p class="text-sm text-gray-500">Liveness/readiness endpoint for Kubernetes</p>
-      </a>
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- K8s Cluster Overview -->
+            <div class="bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-dharmachakra mr-2 text-blue-400"></i>
+                    Kubernetes Status
+                </h2>
+                <div id="k8s-status" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span>Pods Running</span>
+                        <span id="pods-count" class="text-green-400">Loading...</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Node Health</span>
+                        <span id="nodes-health" class="text-green-400">Loading...</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Deployments</span>
+                        <span id="deployments-count" class="text-blue-400">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Metrics -->
+            <div class="bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-microchip mr-2 text-purple-400"></i>
+                    System Metrics
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span>CPU Usage</span>
+                            <span id="cpu-usage" class="text-purple-400">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div id="cpu-bar" class="bg-purple-400 rounded-full h-2" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span>Memory Usage</span>
+                            <span id="memory-usage" class="text-blue-400">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div id="memory-bar" class="bg-blue-400 rounded-full h-2" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span>Storage</span>
+                            <span id="storage-usage" class="text-teal-400">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div id="storage-bar" class="bg-teal-400 rounded-full h-2" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Health -->
+            <div class="bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-heartbeat mr-2 text-red-400"></i>
+                    Application Health
+                </h2>
+                <div id="app-health" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span>Response Time</span>
+                        <span id="response-time" class="text-green-400">Loading...</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Error Rate</span>
+                        <span id="error-rate" class="text-yellow-400">Loading...</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Uptime</span>
+                        <span id="uptime" class="text-blue-400">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics Chart -->
+            <div class="lg:col-span-2 bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-chart-line mr-2 text-blue-400"></i>
+                    Performance Metrics
+                </h2>
+                <canvas id="performanceChart" class="w-full" height="200"></canvas>
+            </div>
+
+            <!-- Recent Events -->
+            <div class="bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-bell mr-2 text-yellow-400"></i>
+                    Recent Events
+                </h2>
+                <div id="events-list" class="space-y-3 max-h-[200px] overflow-y-auto">
+                    <div class="animate-pulse">
+                        <div class="h-4 bg-gray-700 rounded w-3/4"></div>
+                        <div class="space-y-3 mt-4">
+                            <div class="h-4 bg-gray-700 rounded"></div>
+                            <div class="h-4 bg-gray-700 rounded w-5/6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <footer class="mt-10 text-center text-xs text-gray-400">
-      &copy; {{ 2025 }} Ops - Dashboard | Built with Flask
+    <script>
+        // Update current time
+        function updateTime() {
+            document.getElementById('current-time').textContent = moment().format('YYYY-MM-DD HH:mm:ss');
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Initialize Performance Chart
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'CPU Usage',
+                    borderColor: 'rgb(167, 139, 250)',
+                    data: []
+                }, {
+                    label: 'Memory Usage',
+                    borderColor: 'rgb(96, 165, 250)',
+                    data: []
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'rgb(229, 231, 235)'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgb(229, 231, 235)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgb(229, 231, 235)'
+                        }
+                    }
+                }
+            }
+        });
+
+        async function fetchAndUpdateData() {
+            try {
+                // Fetch metrics data
+                const metricsRes = await fetch('/metrics');
+                const metricsData = await metricsRes.json();
+                
+                // Update system metrics
+                updateSystemMetrics(metricsData.system);
+                
+                // Update performance chart
+                updatePerformanceChart(metricsData.performance);
+                
+                // Fetch K8s status
+                const k8sRes = await fetch('/k8s/status');
+                const k8sData = await k8sRes.json();
+                updateK8sStatus(k8sData);
+                
+                // Fetch application health
+                const healthRes = await fetch('/health');
+                const healthData = await healthRes.json();
+                updateAppHealth(healthData);
+                
+                // Fetch recent events
+                const eventsRes = await fetch('/events');
+                const eventsData = await eventsRes.json();
+                updateEvents(eventsData);
+                
+            } catch (err) {
+                console.error('Error fetching data:', err);
+            }
+        }
+
+        function updateSystemMetrics(data) {
+            // Update CPU
+            document.getElementById('cpu-usage').textContent = `${data.cpu}%`;
+            document.getElementById('cpu-bar').style.width = `${data.cpu}%`;
+            
+            // Update Memory
+            document.getElementById('memory-usage').textContent = `${data.memory}%`;
+            document.getElementById('memory-bar').style.width = `${data.memory}%`;
+            
+            // Update Storage
+            document.getElementById('storage-usage').textContent = `${data.storage}%`;
+            document.getElementById('storage-bar').style.width = `${data.storage}%`;
+        }
+
+        function updatePerformanceChart(data) {
+            const maxDataPoints = 10;
+            
+            performanceChart.data.labels.push(moment().format('HH:mm:ss'));
+            performanceChart.data.datasets[0].data.push(data.cpu);
+            performanceChart.data.datasets[1].data.push(data.memory);
+            
+            if (performanceChart.data.labels.length > maxDataPoints) {
+                performanceChart.data.labels.shift();
+                performanceChart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+            
+            performanceChart.update();
+        }
+
+        function updateK8sStatus(data) {
+            document.getElementById('pods-count').textContent = data.pods;
+            document.getElementById('nodes-health').textContent = data.nodes;
+            document.getElementById('deployments-count').textContent = data.deployments;
+        }
+
+        function updateAppHealth(data) {
+            document.getElementById('response-time').textContent = `${data.responseTime}ms`;
+            document.getElementById('error-rate').textContent = `${data.errorRate}%`;
+            document.getElementById('uptime').textContent = data.uptime;
+        }
+
+        function updateEvents(events) {
+            const eventsList = document.getElementById('events-list');
+            eventsList.innerHTML = events.map(event => `
+                <div class="p-2 rounded bg-gray-700 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">${event.type}</span>
+                        <span class="text-xs text-gray-400">${moment(event.timestamp).fromNow()}</span>
+                    </div>
+                    <p class="text-gray-300 mt-1">${event.message}</p>
+                </div>
+            `).join('');
+        }
+
+        // Start live updates
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAndUpdateData();
+            setInterval(fetchAndUpdateData, 5000);
+        });
+    </script>
+    <footer class="mt-8 text-center text-sm text-gray-500">
+        <p>&copy; {{ 2025 }} Ops Dashboard | Built with Flask </p>
+        <div class="mt-2 flex justify-center space-x-4">
+            <span><i class="fas fa-code-branch mr-1"></i>Version 2.0</span>
+            <span><i class="fas fa-check-circle mr-1 text-green-400"></i>Production Ready</span>
+        </div>
     </footer>
-  </div>
 </body>
 </html>
