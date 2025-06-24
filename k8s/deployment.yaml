@@ -17,6 +17,7 @@ spec:
       containers:
         - name: ops-dashboard-container
           image: srikant25/ops-dashboard:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
           readinessProbe:
